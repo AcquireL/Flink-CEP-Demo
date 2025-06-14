@@ -1,11 +1,13 @@
 package com.kali.flink.main;
 
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.cep.CEP;
 import org.apache.flink.cep.PatternSelectFunction;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.cep.pattern.conditions.SimpleCondition;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -20,8 +22,11 @@ public class CEPExample {
         // 创建流处理环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
+        env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
 
-        DataStreamSource<String> source = env.addSource(new SocketTextStreamFunction("acquirel", 9999, "\n", -1));
+        DataStreamSource<String> source = (DataStreamSource<String>) env
+                .addSource(new SocketTextStreamFunction("localhost", 9999, "\n", -1));
+
         DataStream<Tuple2<String, Integer>> stream =source.map(new MapFunction<String, Tuple2<String,Integer>>() {
             @Override
             public Tuple2<String, Integer> map(String s) throws Exception {
